@@ -1,8 +1,6 @@
 {
-  "buildCommand": "npm install",
   "devCommand": "vercel dev",
   "installCommand": "npm install",
-  "framework": "static",
   "functions": {
     "api/**/*.js": {
       "runtime": "nodejs18.x"
