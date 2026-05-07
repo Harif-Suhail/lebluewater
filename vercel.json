@@ -1,4 +1,5 @@
 {
+  "outputDirectory": ".",
   "devCommand": "vercel dev",
   "installCommand": "npm install"
 }
