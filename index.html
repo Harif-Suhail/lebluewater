@@ -600,7 +600,7 @@ nutritional info</p>
             <div class="modal-body">
              <h4>Order Online Form</h4>
                     <p> If you want to enjoy our products, services & accesories, kindly complete the Order On Line Form now. For the same, please </p>
-                    <form action="mail.php" method="POST" name="order">
+                    <form action="/api/mail" method="POST" name="order" onsubmit="handleFormSubmit(event)">
                 <div class="row">
                       <div class="col-md-12">
                          <div class="form-group">
@@ -670,12 +670,54 @@ nutritional info</p>
     <script src="https://cdn.botpress.cloud/webchat/v1/inject.js"></script> 
     <script src="https://mediafiles.botpress.cloud/19a4a3a2-d141-45d9-aaa3-e3555bcd01c6/webchat/config.js" defer></script>
     <script type="text/javascript">
-        $('form').on('submit', function(e) {
-  if(grecaptcha.getResponse() == "") {
-    e.preventDefault();
-    alert("You can't proceed without reCAPTCHA ");
-  } 
-});
+        function handleFormSubmit(event) {
+            event.preventDefault();
+            
+            // Check reCAPTCHA
+            if(grecaptcha.getResponse() == "") {
+                alert("You can't proceed without reCAPTCHA");
+                return;
+            }
+            
+            const form = event.target;
+            const formData = new FormData(form);
+            const data = {
+                name: formData.get('name'),
+                mail: formData.get('mail'),
+                phone: formData.get('phone'),
+                products: formData.get('products'),
+                quantity: formData.get('quantity')
+            };
+            
+            // Send to API
+            fetch('/api/mail', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if(result.success) {
+                    alert('Order sent successfully. We will contact you soon.');
+                    form.reset();
+                    grecaptcha.reset();
+                    window.location.href = 'index.html';
+                } else {
+                    alert('Error: ' + (result.error || 'Failed to send order'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error sending order. Please try again later.');
+            });
+        }
+        
+        // Add handler to existing forms on page load
+        $(document).ready(function() {
+            $('form[name="order"]').on('submit', handleFormSubmit);
+        });
     </script>
 </body>
 

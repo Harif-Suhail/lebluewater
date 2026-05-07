@@ -1,1 +1,5 @@
 *.zip
+.env.local
+.env.example
+node_modules/
+dist/

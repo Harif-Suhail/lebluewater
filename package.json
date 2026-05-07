@@ -1,0 +1,13 @@
+{
+  "name": "lebluewater",
+  "version": "1.0.0",
+  "description": "Le Blue Mineral Water Website",
+  "main": "index.html",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'Static site'"
+  },
+  "dependencies": {
+    "nodemailer": "^6.9.7"
+  }
+}
