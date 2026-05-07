@@ -267,17 +267,259 @@
     <script src="js/wow.min.js"></script>
     <script src="js/jquery.ripples.js"></script>
     <script src="js/custom.js"></script>
+    <!-- Notification Toast Styles -->
+    <style>
+        .notification-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        .notification-overlay.active {
+            display: flex;
+        }
+        
+        .notification-modal {
+            background: white;
+            border-radius: 10px;
+            padding: 40px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.4s ease-out;
+        }
+        
+        .notification-modal.success {
+            border-top: 5px solid #28a745;
+        }
+        
+        .notification-modal.error {
+            border-top: 5px solid #dc3545;
+        }
+        
+        .notification-icon {
+            font-size: 50px;
+            margin-bottom: 15px;
+            animation: scaleIn 0.5s ease-out;
+        }
+        
+        .notification-icon.success {
+            color: #28a745;
+        }
+        
+        .notification-icon.error {
+            color: #dc3545;
+        }
+        
+        .notification-title {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .notification-message {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        
+        .notification-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        .notification-btn {
+            padding: 10px 25px;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+        
+        .notification-btn.primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .notification-btn.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .notification-btn.secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+        
+        .notification-btn.secondary:hover {
+            background: #e0e0e0;
+        }
+        
+        .form-loading {
+            display: none;
+            position: relative;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.5);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        .btn-submit-loading {
+            position: relative;
+            color: transparent;
+        }
+        
+        .btn-submit-loading::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            top: 50%;
+            left: 50%;
+            margin-left: -8px;
+            margin-top: -8px;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            border-top: 2px solid transparent;
+            animation: spin 0.8s linear infinite;
+        }
+    </style>
+    
     <script type="text/javascript">
+        function showNotification(type, title, message, callback) {
+            const overlay = document.getElementById('notificationOverlay') || createNotificationOverlay();
+            const modal = overlay.querySelector('.notification-modal');
+            
+            modal.className = 'notification-modal ' + type;
+            
+            const icon = modal.querySelector('.notification-icon');
+            icon.className = 'notification-icon ' + type;
+            icon.innerHTML = type === 'success' ? '✓' : '✕';
+            
+            modal.querySelector('.notification-title').textContent = title;
+            modal.querySelector('.notification-message').textContent = message;
+            
+            const buttons = modal.querySelector('.notification-buttons');
+            buttons.innerHTML = type === 'success' 
+                ? '<button class="notification-btn primary" onclick="closeNotificationAndRedirect()">Return to Home</button>'
+                : '<button class="notification-btn primary" onclick="closeNotification()">Try Again</button>';
+            
+            overlay.classList.add('active');
+            
+            if (callback) callback();
+        }
+        
+        function createNotificationOverlay() {
+            const overlay = document.createElement('div');
+            overlay.id = 'notificationOverlay';
+            overlay.className = 'notification-overlay';
+            overlay.onclick = function(e) {
+                if (e.target === overlay) closeNotification();
+            };
+            overlay.innerHTML = `
+                <div class="notification-modal">
+                    <div class="notification-icon"></div>
+                    <div class="notification-title"></div>
+                    <div class="notification-message"></div>
+                    <div class="notification-buttons"></div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+            return overlay;
+        }
+        
+        function closeNotification() {
+            const overlay = document.getElementById('notificationOverlay');
+            if (overlay) {
+                overlay.classList.remove('active');
+            }
+        }
+        
+        function closeNotificationAndRedirect() {
+            closeNotification();
+            // Find and close the modal if it's a Bootstrap modal
+            const modal = document.querySelector('.modal.show');
+            if (modal) {
+                const bsModal = bootstrap.Modal.getInstance(modal);
+                if (bsModal) bsModal.hide();
+            }
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 300);
+        }
+        
         function handleFormSubmit(event) {
             event.preventDefault();
             
+            const form = event.target;
+            const submitBtn = form.querySelector('input[type="submit"]');
+            
             // Check reCAPTCHA
             if(grecaptcha.getResponse() == "") {
-                alert("You can't proceed without reCAPTCHA");
+                showNotification('error', 'Verification Required', 'Please complete the reCAPTCHA verification to proceed.');
                 return;
             }
             
-            const form = event.target;
+            // Disable submit button and show loading state
+            submitBtn.disabled = true;
+            const originalValue = submitBtn.value;
+            submitBtn.value = 'Sending Order...';
+            submitBtn.classList.add('btn-submit-loading');
+            
             const formData = new FormData(form);
             const data = {
                 name: formData.get('name'),
@@ -287,28 +529,57 @@
                 quantity: formData.get('quantity')
             };
             
+            // Validate data
+            if (!data.name || !data.mail || !data.phone || !data.products || !data.quantity) {
+                showNotification('error', 'Validation Error', 'Please fill in all required fields.');
+                submitBtn.disabled = false;
+                submitBtn.value = originalValue;
+                submitBtn.classList.remove('btn-submit-loading');
+                return;
+            }
+            
             // Send to API
             fetch('/api/mail', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(data)
+                body: JSON.stringify(data),
+                timeout: 10000
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.json();
+            })
             .then(result => {
                 if(result.success) {
-                    alert('Order sent successfully. We will contact you soon.');
+                    showNotification(
+                        'success',
+                        'Order Sent Successfully!',
+                        `Thank you, ${data.name}! Your order has been received. We will contact you shortly at ${data.mail} to confirm your order.`
+                    );
                     form.reset();
                     grecaptcha.reset();
-                    window.location.href = 'index.html';
                 } else {
-                    alert('Error: ' + (result.error || 'Failed to send order'));
+                    showNotification(
+                        'error',
+                        'Failed to Send Order',
+                        result.error || 'An error occurred while processing your order. Please try again.'
+                    );
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Error sending order. Please try again later.');
+                showNotification(
+                    'error',
+                    'Connection Error',
+                    'Unable to send your order. Please check your internet connection and try again.'
+                );
+            })
+            .finally(() => {
+                submitBtn.disabled = false;
+                submitBtn.value = originalValue;
+                submitBtn.classList.remove('btn-submit-loading');
             });
         }
         
